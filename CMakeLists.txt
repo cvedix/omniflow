@@ -43,6 +43,7 @@ find_package(cvedix REQUIRED)
 target_link_directories(${PROJECT_NAME}
     PRIVATE ${CVEDIX_LIBRARY_DIRS}
 )
+
 target_include_directories(${PROJECT_NAME} PRIVATE ${CVEDIX_INCLUDE_DIRS} /opt/cvedix/include)
 target_link_libraries(${PROJECT_NAME} PRIVATE ${CVEDIX_LIBRARIES} /opt/cvedix/lib/libcvedix_instance_sdk.so)
 pkg_check_modules(GST REQUIRED gstreamer-1.0 gstreamer-video-1.0)

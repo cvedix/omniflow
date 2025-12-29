@@ -24,7 +24,6 @@ void MakeNode::NodeRegister(json &jsonData)
         }
         else if (Node == "cvedix_file_src_node")
         {
-            std::cout << "[DEBUG] Creating cvedix_file_src_node" << std::endl;
             file_src = std::make_shared<cvedix_nodes::cvedix_file_src_node>(
                 jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
                 jsonData["nodes"][countNode]["config"]["channel_index"].get<int>(),
@@ -82,65 +81,28 @@ void MakeNode::NodeRegister(json &jsonData)
             nodes.push_back(udp_src);
         }
         //----------------------------------------------------------------------------------------------------------------
-
         //----------------------------------------------------------------------------------------------------------------
         /*
-                                ______ _____ _____ _________________
-                                | ___ \  ___/  __ \  _  | ___ \  _  \
-                                | |_/ / |__ | /  \/ | | | |_/ / | | |
-                                |    /|  __|| |   | | | |    /| | | |
-                                | |\ \| |___| \__/\ \_/ / |\ \| |/ /
-                                \_| \_\____/ \____/\___/\_| \_|___/
+                                              _______ _____            _____ _  __
+                                             |__   __|  __ \     /\   / ____| |/ /
+                                                | |  | |__) |   /  \ | |    | ' /
+                                                | |  |  _  /   / /\ \| |    |  <
+                                                | |  | | \ \  / ____ \ |____| . \
+                                                |_|  |_|  \_\/_/    \_\_____|_|\_\
         */
-
-        else if (Node == "cvedix_record_node")
+        else if (Node == "cvedix_dsort_track_node")
         {
-            auto record = std::make_shared<cvedix_nodes::cvedix_record_node>(
-                jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
-                jsonData["nodes"][countNode]["config"]["video_save_dir"].get<std::string>(),
-                jsonData["nodes"][countNode]["config"]["image_save_dir"].get<std::string>(),
-                cvedix_objects::cvedix_size{
-                    jsonData["nodes"][countNode]["config"]["resolution_width"].get<int>(),
-                    jsonData["nodes"][countNode]["config"]["resolution_height"].get<int>()},
-                jsonData["nodes"][countNode]["config"]["osd"].get<bool>(),
-                jsonData["nodes"][countNode]["config"]["pre_record_video_duration"].get<int>(),
-                jsonData["nodes"][countNode]["config"]["record_video_duration"].get<int>(),
-                jsonData["nodes"][countNode]["config"]["auto_sub_dir"].get<bool>(),
-                jsonData["nodes"][countNode]["config"]["bitrate"].get<int>());
-            nodes.push_back(record);
-            // record node is a destination node
-            des_node++;
-        }
-        else if (Node == "cvedix_image_record_task")
-        {
-            // use placeholder node to represent image record task in pipeline
-            auto image_record = std::make_shared<cvedix_nodes::cvedix_placeholder_node>(
+            dsort_track = std::make_shared<cvedix_nodes::cvedix_dsort_track_node>(
                 jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>());
-            nodes.push_back(image_record);
+            nodes.push_back(dsort_track);
         }
-        else if (Node == "cvedix_video_record_task")
+        else if (Node == "cvedix_sort_track_node")
         {
-            // use placeholder node to represent video record task in pipeline
-            auto video_record = std::make_shared<cvedix_nodes::cvedix_placeholder_node>(
+            sort_track = std::make_shared<cvedix_nodes::cvedix_sort_track_node>(
                 jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>());
-            nodes.push_back(video_record);
-        }
-        else if (Node == "cvedix_record_task")
-        {
-            // generic record task placeholder
-            auto record_task = std::make_shared<cvedix_nodes::cvedix_placeholder_node>(
-                jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>());
-            nodes.push_back(record_task);
-        }
-        else if (Node == "cvedix_record_status_hookable")
-        {
-            // status hookable treated as a passive node placeholder
-            auto record_status = std::make_shared<cvedix_nodes::cvedix_placeholder_node>(
-                jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>());
-            nodes.push_back(record_status);
+            nodes.push_back(sort_track);
         }
         //----------------------------------------------------------------------------------------------------------------
-
         //----------------------------------------------------------------------------------------------------------------
         /*
                                              _____ _   _ ______ ______ _____   _____
@@ -151,56 +113,48 @@ void MakeNode::NodeRegister(json &jsonData)
                                             |_____|_| \_|_|    |______|_|  \_\_____/
 
         */
-
-        else if (Node == "cvedix_classifier_node")
-        {
-            auto classifier = std::make_shared<cvedix_nodes::cvedix_classifier_node>(
-                jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
-                jsonData["nodes"][countNode]["config"]["model_path"].get<std::string>(),
-                jsonData["nodes"][countNode]["config"]["model_config_path"].get<std::string>(),
-                jsonData["nodes"][countNode]["config"]["labels_path"].get<std::string>(),
-                jsonData["nodes"][countNode]["config"]["input_width"].get<int>(),
-                jsonData["nodes"][countNode]["config"]["input_height"].get<int>(),
-                jsonData["nodes"][countNode]["config"]["batch_size"].get<int>(),
-                jsonData["nodes"][countNode]["config"]["p_class_ids_applied_to"].get<std::vector<int>>(),
-                jsonData["nodes"][countNode]["config"]["min_width_applied_to"].get<int>(),
-                jsonData["nodes"][countNode]["config"]["min_height_applied_to"].get<int>(),
-                jsonData["nodes"][countNode]["config"]["crop_padding"].get<int>(),
-                jsonData["nodes"][countNode]["config"]["need_softmax"].get<bool>(),
-                jsonData["nodes"][countNode]["config"]["scale"].get<float>(),
-                cv::Scalar(123.675, 116.28, 103.53),
-                cv::Scalar(0.229, 0.224, 0.225),
-                jsonData["nodes"][countNode]["config"]["swap_rb"].get<bool>(),
-                jsonData["nodes"][countNode]["config"]["swap_chn"].get<bool>());
-            nodes.push_back(classifier);
-        }
-        else if (Node == "cvedix_dsort_track_node")
-        {
-            auto dsort_track = std::make_shared<cvedix_nodes::cvedix_dsort_track_node>(
-                jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
-                static_cast<cvedix_nodes::cvedix_track_for>(jsonData["nodes"][countNode]["config"]["track_for"].get<int>()));
-            nodes.push_back(dsort_track);
-        }
-        else if (Node == "cvedix_enet_seg_node")
-        {
-            auto enet_seg = std::make_shared<cvedix_nodes::cvedix_enet_seg_node>(
-                jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
-                jsonData["nodes"][countNode]["config"]["model_path"].get<std::string>(),
-                jsonData["nodes"][countNode]["config"]["model_config_path"].get<std::string>(),
-                jsonData["nodes"][countNode]["config"]["labels_path"].get<std::string>(),
-                jsonData["nodes"][countNode]["config"]["input_width"].get<int>(),
-                jsonData["nodes"][countNode]["config"]["input_height"].get<int>(),
-                jsonData["nodes"][countNode]["config"]["batch_size"].get<int>(),
-                jsonData["nodes"][countNode]["config"]["class_id_offset"].get<int>(),
-                jsonData["nodes"][countNode]["config"]["scale"].get<float>(),
-                cv::Scalar(0),
-                cv::Scalar(1),
-                jsonData["nodes"][countNode]["config"]["swap_rb"].get<bool>());
-            nodes.push_back(enet_seg);
-        }
+        // else if (Node == "cvedix_classifier_node")
+        // {
+        //         classifier = std::make_shared<cvedix_nodes::cvedix_classifier_node>(
+        //         jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
+        //         jsonData["nodes"][countNode]["config"]["model_path"].get<std::string>(),
+        //         jsonData["nodes"][countNode]["config"]["model_config_path"].get<std::string>(),
+        //         jsonData["nodes"][countNode]["config"]["labels_path"].get<std::string>(),
+        //         jsonData["nodes"][countNode]["config"]["input_width"].get<int>(),
+        //         jsonData["nodes"][countNode]["config"]["input_height"].get<int>(),
+        //         jsonData["nodes"][countNode]["config"]["batch_size"].get<int>(),
+        //         jsonData["nodes"][countNode]["config"]["p_class_ids_applied_to"].get<std::vector<int>>(),
+        //         jsonData["nodes"][countNode]["config"]["min_width_applied_to"].get<int>(),
+        //         jsonData["nodes"][countNode]["config"]["min_height_applied_to"].get<int>(),
+        //         jsonData["nodes"][countNode]["config"]["crop_padding"].get<int>(),
+        //         jsonData["nodes"][countNode]["config"]["need_softmax"].get<bool>(),
+        //         jsonData["nodes"][countNode]["config"]["scale"].get<float>(),
+        //         cv::Scalar(123.675, 116.28, 103.53),
+        //         cv::Scalar(0.229, 0.224, 0.225),
+        //         jsonData["nodes"][countNode]["config"]["swap_rb"].get<bool>(),
+        //         jsonData["nodes"][countNode]["config"]["swap_chn"].get<bool>());
+        //     nodes.push_back(classifier);
+        // }
+        // else if (Node == "cvedix_enet_seg_node")
+        // {
+        //     enet_seg = std::make_shared<cvedix_nodes::cvedix_enet_seg_node>(
+        //         jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
+        //         jsonData["nodes"][countNode]["config"]["model_path"].get<std::string>(),
+        //         jsonData["nodes"][countNode]["config"]["model_config_path"].get<std::string>(),
+        //         jsonData["nodes"][countNode]["config"]["labels_path"].get<std::string>(),
+        //         jsonData["nodes"][countNode]["config"]["input_width"].get<int>(),
+        //         jsonData["nodes"][countNode]["config"]["input_height"].get<int>(),
+        //         jsonData["nodes"][countNode]["config"]["batch_size"].get<int>(),
+        //         jsonData["nodes"][countNode]["config"]["class_id_offset"].get<int>(),
+        //         jsonData["nodes"][countNode]["config"]["scale"].get<float>(),
+        //         cv::Scalar(0),
+        //         cv::Scalar(1),
+        //         jsonData["nodes"][countNode]["config"]["swap_rb"].get<bool>());
+        //     nodes.push_back(enet_seg);
+        // }
         else if (Node == "cvedix_face_swap_node")
         {
-            auto face_swap = std::make_shared<cvedix_nodes::cvedix_face_swap_node>(
+            face_swap = std::make_shared<cvedix_nodes::cvedix_face_swap_node>(
                 jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
                 jsonData["nodes"][countNode]["config"]["yunet_face_detect_model"].get<std::string>(),
                 jsonData["nodes"][countNode]["config"]["buffalo_l_face_encoding_model"].get<std::string>(),
@@ -215,17 +169,20 @@ void MakeNode::NodeRegister(json &jsonData)
         }
         // else if (Node == "cvedix_feature_encoder_node")
         // {
-        //     auto feature_encoder = std::make_shared<cvedix_nodes::cvedix_feature_encoder_node>(
+        //         feature_encoder = std::make_shared<cvedix_nodes::cvedix_feature_encoder_node>(
         //         jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
         //         jsonData["nodes"][countNode]["config"]["model_path"].get<std::string>());
         // }
         else if (Node == "cvedix_lane_detector_node")
         {
-            auto lane_detector = std::make_shared<cvedix_nodes::cvedix_lane_detector_node>(
+            lane_detector = std::make_shared<cvedix_nodes::cvedix_lane_detector_node>(
                 jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
-                jsonData["nodes"][countNode]["config"]["model_path"].get<std::string>(),
-                jsonData["nodes"][countNode]["config"]["model_config_path"].get<std::string>(),
-                jsonData["nodes"][countNode]["config"]["labels_path"].get<std::string>(),
+                // jsonData["nodes"][countNode]["config"]["model_path"].get<std::string>(),
+                // jsonData["nodes"][countNode]["config"]["model_config_path"].get<std::string>(),
+                // jsonData["nodes"][countNode]["config"]["labels_path"].get<std::string>(),
+                "/opt/cvedix/model/yolov3-tiny-2022-0721_best.weights",
+                "/opt/cvedix/model/yolov3-tiny-2022-0721.cfg",
+                "/opt/cvedix/model/yolov3_tiny_5classes.txt",
                 jsonData["nodes"][countNode]["config"]["input_width"].get<int>(),
                 jsonData["nodes"][countNode]["config"]["input_height"].get<int>(),
                 jsonData["nodes"][countNode]["config"]["batch_size"].get<int>(),
@@ -270,7 +227,7 @@ void MakeNode::NodeRegister(json &jsonData)
         // }
         else if (Node == "cvedix_openpose_detector_node")
         {
-            auto openpose_detector = std::make_shared<cvedix_nodes::cvedix_openpose_detector_node>(
+            openpose_detector = std::make_shared<cvedix_nodes::cvedix_openpose_detector_node>(
                 jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
                 jsonData["nodes"][countNode]["config"]["model_path"].get<std::string>(),
                 jsonData["nodes"][countNode]["config"]["model_config_path"].get<std::string>(),
@@ -302,7 +259,7 @@ void MakeNode::NodeRegister(json &jsonData)
         // }
         else if (Node == "cvedix_restoration_node")
         {
-            auto restoration = std::make_shared<cvedix_nodes::cvedix_restoration_node>(
+            restoration = std::make_shared<cvedix_nodes::cvedix_restoration_node>(
                 jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
                 jsonData["nodes"][countNode]["config"]["realesrgan_bg_restoration_model"].get<std::string>(),
                 jsonData["nodes"][countNode]["config"]["face_restoration_model"].get<std::string>(),
@@ -335,107 +292,11 @@ void MakeNode::NodeRegister(json &jsonData)
         //         }
         else if (Node == "cvedix_sface_feature_encoder_node")
         {
-            auto sface_feature_encoder = std::make_shared<cvedix_nodes::cvedix_sface_feature_encoder_node>(
+            sface_feature_encoder = std::make_shared<cvedix_nodes::cvedix_sface_feature_encoder_node>(
                 jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
                 jsonData["nodes"][countNode]["config"]["model_path"].get<std::string>());
             nodes.push_back(sface_feature_encoder);
         }
-        else if (Node == "cvedix_sort_track_node")
-        {
-            std::cout << "[DEBUG] Creating cvedix_sort_track_node" << std::endl;
-            auto file = std::make_shared<cvedix_nodes::cvedix_sort_track_node>(
-                jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>());
-            nodes.push_back(file);
-        }
-        // else if (Node == "cvedix_track_node")
-        // {
-        //     auto file = std::make_shared<cvedix_nodes::cvedix_track_node>(
-        //         jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
-        //         static_cast<cvedix_nodes::cvedix_track_for>(jsonData["nodes"][countNode]["config"]["track_for"].get<int>()));
-        // }
-        // else if (Node == "cvedix_trt_vehicle_color_classifier")
-        // {
-        //     auto trt_vehicle_color_classifier = std::make_shared<cvedix_nodes::cvedix_trt_vehicle_color_classifier>(
-        //         jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
-        //         jsonData["nodes"][countNode]["config"]["vehicle_color_cls_model_path"].get<std::string>(),
-        //         jsonData["nodes"][countNode]["config"]["p_class_ids_applied_to"].get<std::vector<int>>(),
-        //         jsonData["nodes"][countNode]["config"]["min_width_applied_to"].get<int>(),
-        //         jsonData["nodes"][countNode]["config"]["min_height_applied_to"].get<int>());
-        // }
-        // else if (Node == "cvedix_trt_vehicle_detector")
-        // {
-        //     auto trt_vehicle_detector = std::make_shared<cvedix_nodes::cvedix_trt_vehicle_detector>(
-        //         jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
-        //         jsonData["nodes"][countNode]["config"]["vehicle_det_model_path"].get<std::string>());
-        // }
-        // else if (Node == "cvedix_trt_vehicle_feature_encoder")
-        // {
-        //     auto trt_vehicle_feature_encoder = std::make_shared<cvedix_nodes::cvedix_trt_vehicle_feature_encoder>(
-        //         jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
-        //         jsonData["nodes"][countNode]["config"]["vehicle_feature_model_path"].get<std::string>(),
-        //         jsonData["nodes"][countNode]["config"]["p_class_ids_applied_to"].get<std::vector<int>>(),
-        //         jsonData["nodes"][countNode]["config"]["min_width_applied_to"].get<int>(),
-        //         jsonData["nodes"][countNode]["config"]["min_height_applied_to"].get<int>());
-        // }
-        // else if (Node == "cvedix_trt_vehicle_plate_detector")
-        // {
-        //     auto trt_vehicle_plate_detector = std::make_shared<cvedix_nodes::cvedix_trt_vehicle_plate_detector>(
-        //         jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
-        //         jsonData["nodes"][countNode]["config"]["plate_det_model_path"].get<std::string>(),
-        //         jsonData["nodes"][countNode]["config"]["char_rec_model_path"].get<std::string>());
-        // }
-        // else if (Node == "cvedix_trt_vehicle_plate_detector_v2")
-        // {
-        //     auto trt_vehicle_plate_detector_v2 = std::make_shared<cvedix_nodes::cvedix_trt_vehicle_plate_detector_v2>(
-        //         jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
-        //         jsonData["nodes"][countNode]["config"]["plate_det_model_path"].get<std::string>(),
-        //         jsonData["nodes"][countNode]["config"]["char_rec_model_path"].get<std::string>());
-        // }
-        // else if (Node == "cvedix_trt_vehicle_scanner")
-        // {
-        //     auto trt_vehicle_scanner = std::make_shared<cvedix_nodes::cvedix_trt_vehicle_scanner>(
-        //         jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
-        //         jsonData["nodes"][countNode]["config"]["vehicle_scan_model_path"].get<std::string>());
-        // }
-        //         else if (Node == "cvedix_trt_vehicle_type_classifier")
-        //         {
-        //             auto trt_vehicle_type_classifier = std::make_shared<cvedix_nodes::cvedix_trt_vehicle_type_classifier>(
-        //                 jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
-        //                 jsonData["nodes"][countNode]["config"]["vehicle_type_cls_model_path"].get<std::string>(),
-        //                 jsonData["nodes"][countNode]["config"]["p_class_ids_applied_to"].get<std::vector<int>>(),
-        //                 jsonData["nodes"][countNode]["config"]["min_width_applied_to"].get<int>(),
-        //                 jsonData["nodes"][countNode]["config"]["min_height_applied_to"].get<int>());
-        //         }
-        // else if (Node == "cvedix_trt_yolov8_classifier")
-        // {
-        //     auto trt_yolov8_classifier = std::make_shared<cvedix_nodes::cvedix_trt_yolov8_classifier>(
-        //         jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
-        //         jsonData["nodes"][countNode]["config"]["model_path"].get<std::string>(),
-        //         jsonData["nodes"][countNode]["config"]["labels_path"].get<std::string>(),
-        //         jsonData["nodes"][countNode]["config"]["p_class_ids_applied_to"].get<std::vector<int>>(),
-        //         jsonData["nodes"][countNode]["config"]["min_width_applied_to"].get<int>(),
-        //         jsonData["nodes"][countNode]["config"]["min_height_applied_to"].get<int>());
-        // }
-        // else if (Node == "cvedix_trt_yolov8_detector")
-        // {
-        //     auto trt_yolov8_detector = std::make_shared<cvedix_nodes::cvedix_trt_yolov8_detector>(
-        //         jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
-        //         jsonData["nodes"][countNode]["config"]["model_path"].get<std::string>(),
-        //         jsonData["nodes"][countNode]["config"]["labels_path"].get<std::string>());
-        // }
-        //         else if (Node == "cvedix_trt_yolov8_pose_detector")
-        //         {
-        //             auto trt_yolov8_pose_detector = std::make_shared<cvedix_nodes::cvedix_trt_yolov8_pose_detector>(
-        //                 jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
-        //                 jsonData["nodes"][countNode]["config"]["model_path"].get<std::string>());
-        //         }
-        //         else if (Node == "cvedix_trt_yolov8_seg_detector")
-        //         {
-        //             auto trt_yolov8_seg_detector = std::make_shared<cvedix_nodes::cvedix_trt_yolov8_seg_detector>(
-        //                 jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
-        //                 jsonData["nodes"][countNode]["config"]["model_path"].get<std::string>(),
-        //                 jsonData["nodes"][countNode]["config"]["labels_path"].get<std::string>());
-        //         }
         else if (Node == "cvedix_yolo_detector_node")
         {
             std::cout << "[DEBUG] Creating cvedix_yolo_detector_node" << std::endl;
@@ -464,15 +325,56 @@ void MakeNode::NodeRegister(json &jsonData)
         }
         else if (Node == "cvedix_yunet_face_detector_node")
         {
-            auto yunet_face_detector = std::make_shared<cvedix_nodes::cvedix_yunet_face_detector_node>(
+            yunet_face_detector = std::make_shared<cvedix_nodes::cvedix_yunet_face_detector_node>(
                 jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
                 "../Model/sample.onnx");
             nodes.push_back(yunet_face_detector);
         }
-        //----------------------------------------------------------------------------------------------------------------
-
-        //----------------------------------------------------------------------------------------------------------------
-        /*
+        // else if (Node == "cvedix_trt_vehicle_detector")
+        // {
+        //     trt_vehicle_detector = std::make_shared<cvedix_nodes::cvedix_trt_vehicle_detector>(
+        //         jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
+        //         "/opt/cvedix/model/vehicle_tracking.trt");
+        //     nodes.push_back(trt_vehicle_detector);
+        // }
+        // ----------------------------------------------------------------------------------------------------------------
+        // ----------------------------------------------------------------------------------------------------------------
+        /*                                          ____
+                                                    |  _ \   /\
+                                                    | |_) | /  \
+                                                    |  _ < / /\ \
+                                                    | |_) / ____ \
+                                                    |____/_/    \_\
+        */
+        else if (Node == "cvedix_ba_crossline_node")
+        {
+            ba_crossline = std::make_shared<cvedix_nodes::cvedix_ba_crossline_node>(
+                jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
+                std::map<int, cvedix_objects::cvedix_line>{},
+                true,
+                true);
+            nodes.push_back(ba_crossline);
+        }
+        // else if (Node == "cvedix_ba_jam_node")
+        // {
+        //     ba_jam = std::make_shared<cvedix_nodes::cvedix_ba_jam_node>(
+        //         jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
+        //         std::map<int, cvedix_objects::cvedix_line>{},
+        //         true,
+        //         true);
+        //     nodes.push_back(ba_jam);
+        // }
+        // else if (Node == "cvedix_ba_stop_node")
+        // {
+        //     ba_stop = std::make_shared<cvedix_nodes::cvedix_ba_stop_node>(
+        //         jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
+        //         std::map<int, cvedix_objects::cvedix_line>{},
+        //         true,
+        //         true);
+        //     nodes.push_back(ba_stop);
+        // }
+        /*----------------------------------------------------------------------------------------------------------------
+        /*----------------------------------------------------------------------------------------------------------------
                                             _____ ___________
                                             |  _  /  ___|  _  \
                                             | | | \ `--.| | | |
@@ -482,22 +384,21 @@ void MakeNode::NodeRegister(json &jsonData)
        */
         else if (Node == "cvedix_ba_crossline_osd_node")
         {
-            std::cout << "[DEBUG] Creating cvedix_ba_crossline_osd_node" << std::endl;
-            auto ba_crossline_osd = std::make_shared<cvedix_nodes::cvedix_ba_crossline_osd_node>(
+            ba_crossline_osd = std::make_shared<cvedix_nodes::cvedix_ba_crossline_osd_node>(
                 jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
                 jsonData["nodes"][countNode]["config"]["font"].get<std::string>());
             nodes.push_back(ba_crossline_osd);
         }
         else if (Node == "cvedix_ba_jam_osd_node")
         {
-            auto ba_jam_osd = std::make_shared<cvedix_nodes::cvedix_ba_jam_osd_node>(
+            ba_jam_osd = std::make_shared<cvedix_nodes::cvedix_ba_jam_osd_node>(
                 jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
                 jsonData["nodes"][countNode]["config"]["font"].get<std::string>());
             nodes.push_back(ba_jam_osd);
         }
         else if (Node == "cvedix_ba_stop_osd_node")
         {
-            auto ba_stop_osd = std::make_shared<cvedix_nodes::cvedix_ba_stop_osd_node>(
+            ba_stop_osd = std::make_shared<cvedix_nodes::cvedix_ba_stop_osd_node>(
                 jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
                 jsonData["nodes"][countNode]["config"]["font"].get<std::string>());
 
@@ -505,7 +406,7 @@ void MakeNode::NodeRegister(json &jsonData)
         }
         else if (Node == "cvedix_expr_osd_node")
         {
-            auto expr_osd = std::make_shared<cvedix_nodes::cvedix_expr_osd_node>(
+            expr_osd = std::make_shared<cvedix_nodes::cvedix_expr_osd_node>(
                 jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
                 jsonData["nodes"][countNode]["config"]["font"].get<std::string>());
 
@@ -519,13 +420,13 @@ void MakeNode::NodeRegister(json &jsonData)
         }
         else if (Node == "cvedix_face_osd_node_v2")
         {
-            auto face_osd_v2 = std::make_shared<cvedix_nodes::cvedix_face_osd_node_v2>(
+            face_osd_v2 = std::make_shared<cvedix_nodes::cvedix_face_osd_node_v2>(
                 jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>());
             nodes.push_back(face_osd_v2);
         }
         else if (Node == "cvedix_lane_osd_node")
         {
-            auto lane_osd = std::make_shared<cvedix_nodes::cvedix_lane_osd_node>(
+            lane_osd = std::make_shared<cvedix_nodes::cvedix_lane_osd_node>(
                 jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>());
             nodes.push_back(lane_osd);
         }
@@ -537,28 +438,28 @@ void MakeNode::NodeRegister(json &jsonData)
         // }
         else if (Node == "cvedix_osd_node")
         {
-            auto osd = std::make_shared<cvedix_nodes::cvedix_osd_node>(
+            osd = std::make_shared<cvedix_nodes::cvedix_osd_node>(
                 jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
                 jsonData["nodes"][countNode]["config"]["font"].get<std::string>());
             nodes.push_back(osd);
         }
         else if (Node == "cvedix_osd_node_v2")
         {
-            auto osd_v2 = std::make_shared<cvedix_nodes::cvedix_osd_node_v2>(
+            osd_v2 = std::make_shared<cvedix_nodes::cvedix_osd_node_v2>(
                 jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
                 jsonData["nodes"][countNode]["config"]["font"].get<std::string>());
             nodes.push_back(osd_v2);
         }
         else if (Node == "cvedix_osd_node_v3")
         {
-            auto osd_v3 = std::make_shared<cvedix_nodes::cvedix_osd_node_v3>(
+            osd_v3 = std::make_shared<cvedix_nodes::cvedix_osd_node_v3>(
                 jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
                 jsonData["nodes"][countNode]["config"]["font"].get<std::string>());
             nodes.push_back(osd_v3);
         }
         else if (Node == "cvedix_plate_osd_node")
         {
-            auto plate_osd = std::make_shared<cvedix_nodes::cvedix_plate_osd_node>(
+            plate_osd = std::make_shared<cvedix_nodes::cvedix_plate_osd_node>(
                 jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
                 jsonData["nodes"][countNode]["config"]["font"].get<std::string>(),
                 jsonData["nodes"][countNode]["config"]["display_his"].get<bool>());
@@ -566,13 +467,13 @@ void MakeNode::NodeRegister(json &jsonData)
         }
         else if (Node == "cvedix_pose_osd_node")
         {
-            auto pose_osd = std::make_shared<cvedix_nodes::cvedix_pose_osd_node>(
+            pose_osd = std::make_shared<cvedix_nodes::cvedix_pose_osd_node>(
                 jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>());
             nodes.push_back(pose_osd);
         }
         else if (Node == "cvedix_seg_osd_node")
         {
-            auto seg_osd = std::make_shared<cvedix_nodes::cvedix_seg_osd_node>(
+            seg_osd = std::make_shared<cvedix_nodes::cvedix_seg_osd_node>(
                 jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
                 jsonData["nodes"][countNode]["config"]["classes_file"].get<std::string>(),
                 jsonData["nodes"][countNode]["config"]["colors_file"].get<std::string>());
@@ -580,10 +481,38 @@ void MakeNode::NodeRegister(json &jsonData)
         }
         else if (Node == "cvedix_text_osd_node")
         {
-            auto text_osd = std::make_shared<cvedix_nodes::cvedix_text_osd_node>(
+            text_osd = std::make_shared<cvedix_nodes::cvedix_text_osd_node>(
                 jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
                 jsonData["nodes"][countNode]["config"]["font"].get<std::string>());
             nodes.push_back(text_osd);
+        }
+        //----------------------------------------------------------------------------------------------------------------
+        //----------------------------------------------------------------------------------------------------------------
+
+        /*
+                                ______ _____ _____ _________________
+                                | ___ \  ___/  __ \  _  | ___ \  _  \
+                                | |_/ / |__ | /  \/ | | | |_/ / | | |
+                                |    /|  __|| |   | | | |    /| | | |
+                                | |\ \| |___| \__/\ \_/ / |\ \| |/ /
+                                \_| \_\____/ \____/\___/\_| \_|___/
+        */
+
+        else if (Node == "cvedix_record_node")
+        {
+            record = std::make_shared<cvedix_nodes::cvedix_record_node>(
+                jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
+                jsonData["nodes"][countNode]["config"]["video_save_dir"].get<std::string>(),
+                jsonData["nodes"][countNode]["config"]["image_save_dir"].get<std::string>(),
+                cvedix_objects::cvedix_size{
+                    jsonData["nodes"][countNode]["config"]["resolution_width"].get<int>(),
+                    jsonData["nodes"][countNode]["config"]["resolution_height"].get<int>()},
+                jsonData["nodes"][countNode]["config"]["osd"].get<bool>(),
+                jsonData["nodes"][countNode]["config"]["pre_record_video_duration"].get<int>(),
+                jsonData["nodes"][countNode]["config"]["record_video_duration"].get<int>(),
+                jsonData["nodes"][countNode]["config"]["auto_sub_dir"].get<bool>(),
+                jsonData["nodes"][countNode]["config"]["bitrate"].get<int>());
+            nodes.push_back(record);
         }
         //----------------------------------------------------------------------------------------------------------------
 
@@ -682,11 +611,19 @@ void MakeNode::NodeRegister(json &jsonData)
         // }
         else if (Node == "cvedix_json_mqtt_broker_node")
         {
-            auto json_mqtt_broker = std::make_shared<cvedix_nodes::cvedix_json_mqtt_broker_node>(
+            json_mqtt_broker = std::make_shared<cvedix_nodes::cvedix_json_mqtt_broker_node>(
                 jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
                 static_cast<cvedix_nodes::cvedix_broke_for>(jsonData["nodes"][countNode]["config"]["broke_for"].get<int>()),
                 jsonData["nodes"][countNode]["config"]["broking_cache_warn_threshold"].get<int>(),
-                jsonData["nodes"][countNode]["config"]["broking_cache_ignore_threshold"].get<int>());
+                jsonData["nodes"][countNode]["config"]["broking_cache_ignore_threshold"].get<int>(),
+                [](const std::string &json)
+                {
+                    return "{\"event\": \"crossline\", \"payload\": " + json + "}";
+                },
+                [](const std::string &msg)
+                {
+                    std::cout << "[MQTT SEND] " << msg << std::endl;
+                });
             nodes.push_back(json_mqtt_broker);
         }
         // else if (Node == "cvedix_msg_broker_node")
@@ -926,21 +863,6 @@ void MakeNode::NodeRegister(json &jsonData)
                 jsonData["nodes"][countNode]["config"]["channel_index"].get<int>(),
                 jsonData["nodes"][countNode]["config"]["osd"].get<bool>());
             nodes.push_back(screen_des);
-            des_node++;
-        }
-        //----------------------------------------------------------------------------------------------------------------
-        /*
-                                ba
-        */
-        else if (Node == "cvedix_ba_crossline_node")
-        {
-            std::cout << "[DEBUG] Creating cvedix_ba_crossline_node" << std::endl;
-            auto ba_crossline = std::make_shared<cvedix_nodes::cvedix_ba_crossline_node>(
-                jsonData["nodes"][countNode]["config"]["node_name"].get<std::string>(),
-                std::map<int, cvedix_objects::cvedix_line>{},
-                true,
-                false);
-            nodes.push_back(ba_crossline);
             des_node++;
         }
     }
