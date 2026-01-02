@@ -9,20 +9,21 @@
 using namespace drogon;
 using json = nlohmann::json;
 
-class GetModelList : public drogon::HttpSimpleController<GetModelList>
+class GetImageList : public drogon::HttpSimpleController<GetImageList>
 {
 public:
   void asyncHandleHttpRequest(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback) override;
   PATH_LIST_BEGIN
-  PATH_ADD("/lego/getmodellist", Get);
+  // list path definitions here;
+  PATH_ADD("/lego/getimagelist", Get);
   PATH_LIST_END
 };
 
-class DeleteModel : public drogon::HttpSimpleController<DeleteModel>
+class DeleteImage : public drogon::HttpSimpleController<DeleteImage>
 {
 public:
   void asyncHandleHttpRequest(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback) override;
   PATH_LIST_BEGIN
-  PATH_ADD("/lego/deletemodel", Post);
+  PATH_ADD("/lego/deleteimage", Post);
   PATH_LIST_END
 };

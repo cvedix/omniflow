@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+
 //----------------------------------------------------------------------------------------------------------------
 /*
                                 _____  _____ _   _______  _____  _____
@@ -28,10 +29,6 @@
 */
 
 #include "cvedix/nodes/record/cvedix_record_node.h"
-#include "cvedix/nodes/record/cvedix_image_record_task.h"
-#include "cvedix/nodes/record/cvedix_record_status_hookable.h"
-#include "cvedix/nodes/record/cvedix_record_task.h"
-#include "cvedix/nodes/record/cvedix_video_record_task.h"
 //----------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------
 /*

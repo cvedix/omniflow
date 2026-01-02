@@ -43,6 +43,7 @@ find_package(cvedix REQUIRED)
 target_link_directories(${PROJECT_NAME}
     PRIVATE ${CVEDIX_LIBRARY_DIRS}
 )
+
 target_include_directories(${PROJECT_NAME} PRIVATE ${CVEDIX_INCLUDE_DIRS} /opt/cvedix/include)
 target_link_libraries(${PROJECT_NAME} PRIVATE ${CVEDIX_LIBRARIES} /opt/cvedix/lib/libcvedix_instance_sdk.so)
 pkg_check_modules(GST REQUIRED gstreamer-1.0 gstreamer-video-1.0)
@@ -110,3 +111,24 @@ target_compile_definitions(cvedix_backend
 # ##############################################################################
 message(STATUS "CVEDIX INCLUDE DIRS = ${CVEDIX_INCLUDE_DIRS}")
 add_subdirectory(test)
+
+# ================= DEBUG CONFIG =================
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    message(STATUS "Build type: DEBUG")
+
+    target_compile_options(${PROJECT_NAME} PRIVATE
+        -g
+        -O0
+        -Wall
+        -Wextra
+    )
+
+    target_compile_definitions(${PROJECT_NAME} PRIVATE DEBUG)
+else()
+    message(STATUS "Build type: RELEASE")
+
+    target_compile_options(${PROJECT_NAME} PRIVATE
+        -O3
+    )
+endif()
+# ================================================
