@@ -1,0 +1,134 @@
+//-------------------------------------yolo_detect_pipeline---------------------------------------------------
+{
+    "nodes": [
+        {
+            "type": "cvedix_file_src_node",
+            "config": {
+                "node_name": "file_src",
+                "channel_index": 0,
+                "video_name": "vid-1.mp4",
+                "resize_ratio": 1.0,
+                "cycle": false,
+                "gst_decoder_name": "avdec_h264",
+                "skip_interval": 1
+            }
+        },
+        {
+            "type": "cvedix_yolo_detector_node",
+            "config": {
+                "node_name": "yolo_detector",
+                "input_width": 416,
+                "input_height": 416,
+                "batch_size": 1,
+                "class_id_offset": 0,
+                "score_threshold": 0.5,
+                "confidence_threshold": 0.5,
+                "nms_threshold": 0.5,
+                "scale": 0.0039215686,
+                "mean_r": 0.0,
+                "mean_g": 0.0,
+                "mean_b": 0.0,
+                "std_r": 1.0,
+                "std_g": 1.0,
+                "std_b": 1.0,
+                "swap_rb": true
+            }
+        },
+        {
+            "type": "cvedix_dsort_track_node",
+            "config": {
+                "node_name": "dsort_tracker"
+            }
+        },
+        {
+            "type": "cvedix_ba_crossline_node",
+            "config": {
+                "node_name": "ba_crossline",
+                "need_record_image": true,
+                "need_record_video": false
+            }
+        },
+        {
+            "type": "cvedix_ba_crossline_osd_node",
+            "config": {
+                "node_name": "osd",
+                "font": "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+            }
+        },
+        {
+            "type": "cvedix_rtmp_des_node",
+            "config": {
+                "node_name": "rtmp_node",
+                "channel_index": 0,
+                "rtmp_url": "rtmp://anhoidong.datacenter.cvedix.com:1935/live/stream",
+                "resolution_width": 360,
+                "resolution_height": 240,
+                "bitrate": 600,
+                "osd": true,
+                "gst_encoder_name": "x264enc"
+            }
+        }
+    ]
+}
+//-------------------------------------yunetface_detect_pipeline---------------------------------------------------
+{
+    "nodes": [
+        {
+            "type": "cvedix_file_src_node",
+            "config": {
+                "node_name": "file_src",
+                "channel_index": 0,
+                "video_name": "face_person.mp4",
+                "resize_ratio": 1.0,
+                "cycle": false,
+                "gst_decoder_name": "avdec_h264",
+                "skip_interval": 1
+            }
+        },
+        {
+            "type": "cvedix_yunet_face_detector_node",
+            "config": {
+                "node_name": "face_detector"
+            }
+        },
+        {
+            "type": "cvedix_face_osd_node",
+            "config": {
+                "node_name": "osd"
+            }
+        },
+        {
+            "type": "cvedix_screen_des_node",
+            "config": {
+                "node_name": "screen_des_0",
+                "channel_index": 0,
+                "osd": true
+            }
+        },
+        {
+            "type": "cvedix_rtmp_des_node",
+            "config": {
+                "node_name": "rtmp_node",
+                "channel_index": 0,
+                "rtmp_url": "rtmp://anhoidong.datacenter.cvedix.com:1935/live/stream",
+                "resolution_width": 1280,
+                "resolution_height": 720,
+                "bitrate": 1000,
+                "osd": true,
+                "gst_encoder_name": "x264enc"
+            }
+        }
+    ]
+}
+//-------------------------------------API LIST---------------------------------------------------
+//------------------------Xem danh sách hình ảnh, mô hình, video đã tải lên hệ thống------------------------
+http: //127.0.0.1:8090/lego/getimagelist
+http: //127.0.0.1:8090/lego/getmodellist
+http: //127.0.0.1:8090/lego/getvideolist
+//------------------------Xóa hình ảnh, mô hình, video khỏi hệ thống------------------------
+http: //127.0.0.1:8090/lego/deleteimage
+http: //127.0.0.1:8090/lego/deletemodel
+http: //127.0.0.1:8090/lego/deletevideo
+//------------------------Khởi động pipeline, dừng pipeline------------------------
+http: //127.0.0.1:8090/lego/startpipeline
+http: //127.0.0.1:8090/lego/stoppipeline

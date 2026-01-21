@@ -24,22 +24,22 @@ void GetImageList::asyncHandleHttpRequest(const HttpRequestPtr &req, std::functi
 void DeleteImage::asyncHandleHttpRequest(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback)
 {
     json jsonData = json::parse(req->body());
-    std::string model_name = jsonData.value("image_name", "");
-    // if (model_name == "yolov3-tiny-2022-0721_best.weights" || model_name == "yolov3-tiny-2022-0721.cfg" || model_name == "yolov3_tiny_5classes.txt")
-    // {
-    //     json res;
-    //     res["status"] = "ERROR";
-    //     res["message"] = "Cannot delete default models";
-    //     auto httpResp = HttpResponse::newHttpResponse();
-    //     httpResp->setContentTypeCode(CT_APPLICATION_JSON);
-    //     httpResp->setBody(res.dump());
-    //     callback(httpResp);
-    //     return;
-    // }
-    std::string model_path = "/opt/cvedix/image/" + model_name;
-    if (std::filesystem::exists(model_path))
+    std::string image_name = jsonData.value("image_name", "");
+    if (image_name == "1.jpg" || image_name == "2.jpg" || image_name == "3.jpg" || image_name == "4.jpg")
     {
-        std::filesystem::remove(model_path);
+        json res;
+        res["status"] = "ERROR";
+        res["message"] = "Cannot delete default models";
+        auto httpResp = HttpResponse::newHttpResponse();
+        httpResp->setContentTypeCode(CT_APPLICATION_JSON);
+        httpResp->setBody(res.dump());
+        callback(httpResp);
+        return;
+    }
+    std::string image_path = "/opt/cvedix/image/" + image_name;
+    if (std::filesystem::exists(image_path))
+    {
+        std::filesystem::remove(image_path);
         json res;
         res["status"] = "SUCCESS";
         res["message"] = "Image deleted successfully";
