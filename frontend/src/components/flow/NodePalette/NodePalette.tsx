@@ -25,8 +25,10 @@ export const NodePalette: React.FC = () => {
 
   const categoryLabels = {
     [NodeCategory.SOURCE]: 'Source Nodes',
-    [NodeCategory.PROCESSING]: 'Processing Nodes',
-    [NodeCategory.OUTPUT]: 'Output Nodes',
+    [NodeCategory.DETECTOR]: 'Detector Nodes',
+    [NodeCategory.ANALYTICS]: 'Analytics Nodes',
+    [NodeCategory.OSD]: 'OSD Nodes',
+    [NodeCategory.DESTINATION]: 'Destination Nodes',
     [NodeCategory.HIDDEN]: 'Hidden Nodes',
   };
 

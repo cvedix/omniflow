@@ -3,17 +3,21 @@ import { BackendPipelineRequest, BackendNodeConfig } from '@/api/pipeline.api';
 
 /**
  * Build complete pipeline JSON for backend
- * Builds nodes in the correct order: Source -> YOLO -> Tracker -> Crossline -> OSD -> RTMP
+ * Supports two pipeline types:
+ * - Object Detection: Source -> YOLO -> Tracker -> Crossline -> Crossline OSD -> RTMP
+ * - Face Detection: Source -> Face Detector -> Face OSD -> RTMP
  */
 export const buildBackendPipeline = (nodes: NodeInstance[]): BackendPipelineRequest => {
   const backendNodes: BackendNodeConfig[] = [];
 
-  // Find visible nodes
+  // Find all nodes
   const sourceNode = nodes.find((n) => n.type === CvedixNodeType.FILE_SOURCE);
   const yoloNode = nodes.find((n) => n.type === CvedixNodeType.YOLO_DETECTOR);
   const trackerNode = nodes.find((n) => n.type === CvedixNodeType.DSORT_TRACKER);
   const crosslineNode = nodes.find((n) => n.type === CvedixNodeType.BA_CROSSLINE);
-  const osdNode = nodes.find((n) => n.type === CvedixNodeType.BA_CROSSLINE_OSD);
+  const crosslineOsdNode = nodes.find((n) => n.type === CvedixNodeType.BA_CROSSLINE_OSD);
+  const faceDetectorNode = nodes.find((n) => n.type === CvedixNodeType.YUNET_FACE_DETECTOR);
+  const faceOsdNode = nodes.find((n) => n.type === CvedixNodeType.FACE_OSD);
   const destinationNode = nodes.find((n) => n.type === CvedixNodeType.RTMP_DESTINATION);
 
   // Build pipeline in correct order
@@ -34,7 +38,7 @@ export const buildBackendPipeline = (nodes: NodeInstance[]): BackendPipelineRequ
     });
   }
 
-  // 2. YOLO Detector node
+  // 2. YOLO Detector node (Object Detection Pipeline)
   if (yoloNode) {
     backendNodes.push({
       type: yoloNode.type,
@@ -82,17 +86,37 @@ export const buildBackendPipeline = (nodes: NodeInstance[]): BackendPipelineRequ
   }
 
   // 5. BA Crossline OSD node
-  if (osdNode) {
+  if (crosslineOsdNode) {
     backendNodes.push({
-      type: osdNode.type,
+      type: crosslineOsdNode.type,
       config: {
-        node_name: osdNode.data.config.node_name || 'osd',
-        font: osdNode.data.config.font || '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+        node_name: crosslineOsdNode.data.config.node_name || 'osd',
+        font: crosslineOsdNode.data.config.font || '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
       },
     });
   }
 
-  // 6. RTMP destination node
+  // 6. Yunet Face Detector node (Face Detection Pipeline)
+  if (faceDetectorNode) {
+    backendNodes.push({
+      type: faceDetectorNode.type,
+      config: {
+        node_name: faceDetectorNode.data.config.node_name || 'face_detector',
+      },
+    });
+  }
+
+  // 7. Face OSD node
+  if (faceOsdNode) {
+    backendNodes.push({
+      type: faceOsdNode.type,
+      config: {
+        node_name: faceOsdNode.data.config.node_name || 'osd',
+      },
+    });
+  }
+
+  // 8. RTMP destination node (always last)
   if (destinationNode) {
     backendNodes.push({
       type: destinationNode.type,
@@ -119,11 +143,17 @@ export const buildBackendPipeline = (nodes: NodeInstance[]): BackendPipelineRequ
  */
 export const validatePipeline = (nodes: NodeInstance[]): { valid: boolean; error?: string } => {
   const hasSource = nodes.some((n) => n.type === CvedixNodeType.FILE_SOURCE);
+  const hasDestination = nodes.some((n) => n.type === CvedixNodeType.RTMP_DESTINATION);
+
+  // Check for object detection pipeline nodes
   const hasYolo = nodes.some((n) => n.type === CvedixNodeType.YOLO_DETECTOR);
   const hasTracker = nodes.some((n) => n.type === CvedixNodeType.DSORT_TRACKER);
   const hasCrossline = nodes.some((n) => n.type === CvedixNodeType.BA_CROSSLINE);
-  const hasOsd = nodes.some((n) => n.type === CvedixNodeType.BA_CROSSLINE_OSD);
-  const hasDestination = nodes.some((n) => n.type === CvedixNodeType.RTMP_DESTINATION);
+  const hasCrosslineOsd = nodes.some((n) => n.type === CvedixNodeType.BA_CROSSLINE_OSD);
+
+  // Check for face detection pipeline nodes
+  const hasFaceDetector = nodes.some((n) => n.type === CvedixNodeType.YUNET_FACE_DETECTOR);
+  const hasFaceOsd = nodes.some((n) => n.type === CvedixNodeType.FACE_OSD);
 
   if (!hasSource) {
     return { valid: false, error: 'Pipeline must have a Video Source node' };
@@ -139,18 +169,12 @@ export const validatePipeline = (nodes: NodeInstance[]): { valid: boolean; error
     return { valid: false, error: 'Video Source node must have a video selected' };
   }
 
-  // Log warnings for missing optional processing nodes
-  if (!hasYolo) {
-    console.warn('Pipeline has no YOLO Detector node - detection will not work');
-  }
-  if (!hasTracker) {
-    console.warn('Pipeline has no DeepSORT Tracker node - tracking will not work');
-  }
-  if (!hasCrossline) {
-    console.warn('Pipeline has no Crossline Analytics node');
-  }
-  if (!hasOsd) {
-    console.warn('Pipeline has no Crossline OSD node - no visual overlay');
+  // Check that at least one processing pipeline is present
+  const hasObjectDetectionPipeline = hasYolo || hasTracker || hasCrossline || hasCrosslineOsd;
+  const hasFaceDetectionPipeline = hasFaceDetector || hasFaceOsd;
+
+  if (!hasObjectDetectionPipeline && !hasFaceDetectionPipeline) {
+    console.warn('Pipeline has no processing nodes - only source and destination');
   }
 
   return { valid: true };
@@ -158,15 +182,21 @@ export const validatePipeline = (nodes: NodeInstance[]): { valid: boolean; error
 
 /**
  * Get the correct pipeline order for nodes
+ * Order: Source -> Object Detection nodes -> Face Detection nodes -> RTMP
  */
 const getPipelineOrder = (nodeType: string): number => {
   const order: Record<string, number> = {
     [CvedixNodeType.FILE_SOURCE]: 0,
+    // Object Detection Pipeline (order 1-4)
     [CvedixNodeType.YOLO_DETECTOR]: 1,
     [CvedixNodeType.DSORT_TRACKER]: 2,
     [CvedixNodeType.BA_CROSSLINE]: 3,
     [CvedixNodeType.BA_CROSSLINE_OSD]: 4,
-    [CvedixNodeType.RTMP_DESTINATION]: 5,
+    // Face Detection Pipeline (order 5-6)
+    [CvedixNodeType.YUNET_FACE_DETECTOR]: 5,
+    [CvedixNodeType.FACE_OSD]: 6,
+    // Output (always last)
+    [CvedixNodeType.RTMP_DESTINATION]: 100,
   };
   return order[nodeType] ?? 99;
 };

@@ -1,8 +1,10 @@
 // Node categories
 export enum NodeCategory {
   SOURCE = 'source',
-  PROCESSING = 'processing',
-  OUTPUT = 'output',
+  DETECTOR = 'detector',
+  ANALYTICS = 'analytics',
+  OSD = 'osd',
+  DESTINATION = 'destination',
   HIDDEN = 'hidden', // For auto-generated nodes not shown in UI
 }
 
@@ -11,11 +13,15 @@ export enum CvedixNodeType {
   // Source nodes
   FILE_SOURCE = 'cvedix_file_src_node',
 
-  // Processing nodes
+  // Processing nodes - Object Detection Pipeline
   YOLO_DETECTOR = 'cvedix_yolo_detector_node',
   DSORT_TRACKER = 'cvedix_dsort_track_node',
   BA_CROSSLINE = 'cvedix_ba_crossline_node',
   BA_CROSSLINE_OSD = 'cvedix_ba_crossline_osd_node',
+
+  // Processing nodes - Face Detection Pipeline
+  YUNET_FACE_DETECTOR = 'cvedix_yunet_face_detector_node',
+  FACE_OSD = 'cvedix_face_osd_node',
 
   // Output nodes
   RTMP_DESTINATION = 'cvedix_rtmp_des_node',

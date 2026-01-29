@@ -55,10 +55,10 @@ export const mockNodeSchemas: NodeSchema[] = [
     },
   },
 
-  // PROCESSING NODE: YOLO Detector
+  // DETECTOR NODE: YOLO Detector
   {
     type: CvedixNodeType.YOLO_DETECTOR,
-    category: NodeCategory.PROCESSING,
+    category: NodeCategory.DETECTOR,
     name: 'YOLO Detector',
     description: 'Detect objects using YOLO deep learning model',
     icon: '🔍',
@@ -222,10 +222,10 @@ export const mockNodeSchemas: NodeSchema[] = [
     },
   },
 
-  // PROCESSING NODE: DeepSORT Tracker (not configurable)
+  // ANALYTICS NODE: DeepSORT Tracker (not configurable)
   {
     type: CvedixNodeType.DSORT_TRACKER,
-    category: NodeCategory.PROCESSING,
+    category: NodeCategory.ANALYTICS,
     name: 'DeepSORT Tracker',
     description: 'Track detected objects across frames using DeepSORT algorithm',
     icon: '🎯',
@@ -254,10 +254,10 @@ export const mockNodeSchemas: NodeSchema[] = [
     },
   },
 
-  // PROCESSING NODE: BA Crossline
+  // ANALYTICS NODE: BA Crossline
   {
     type: CvedixNodeType.BA_CROSSLINE,
-    category: NodeCategory.PROCESSING,
+    category: NodeCategory.ANALYTICS,
     name: 'Crossline Analytics',
     description: 'Detect when tracked objects cross a defined line',
     icon: '📊',
@@ -303,10 +303,10 @@ export const mockNodeSchemas: NodeSchema[] = [
     },
   },
 
-  // PROCESSING NODE: BA Crossline OSD
+  // OSD NODE: BA Crossline OSD
   {
     type: CvedixNodeType.BA_CROSSLINE_OSD,
-    category: NodeCategory.PROCESSING,
+    category: NodeCategory.OSD,
     name: 'Crossline OSD',
     description: 'On-screen display overlay for crossline analytics',
     icon: '🖼️',
@@ -344,10 +344,74 @@ export const mockNodeSchemas: NodeSchema[] = [
     },
   },
 
-  // OUTPUT NODE: RTMP Destination
+  // DETECTOR NODE: Yunet Face Detector (not configurable)
+  {
+    type: CvedixNodeType.YUNET_FACE_DETECTOR,
+    category: NodeCategory.DETECTOR,
+    name: 'Yunet Face Detector',
+    description: 'Detect faces in video stream using Yunet model',
+    icon: '😀',
+    version: '1.0.0',
+    inputs: [
+      {
+        id: 'video-input',
+        type: 'input',
+        dataType: 'video',
+        label: 'Video Stream',
+        required: true,
+      },
+    ],
+    outputs: [
+      {
+        id: 'face-output',
+        type: 'output',
+        dataType: 'face',
+        label: 'Face Detections',
+        required: false,
+      },
+    ],
+    configSchema: [], // No configurable parameters
+    defaultConfig: {
+      node_name: 'face_detector',
+    },
+  },
+
+  // OSD NODE: Face OSD (not configurable)
+  {
+    type: CvedixNodeType.FACE_OSD,
+    category: NodeCategory.OSD,
+    name: 'Face OSD',
+    description: 'On-screen display overlay for face detections',
+    icon: '🖼️',
+    version: '1.0.0',
+    inputs: [
+      {
+        id: 'face-input',
+        type: 'input',
+        dataType: 'face',
+        label: 'Face Detections',
+        required: true,
+      },
+    ],
+    outputs: [
+      {
+        id: 'video-output',
+        type: 'output',
+        dataType: 'video',
+        label: 'Video with Face OSD',
+        required: false,
+      },
+    ],
+    configSchema: [], // No configurable parameters
+    defaultConfig: {
+      node_name: 'osd',
+    },
+  },
+
+  // DESTINATION NODE: RTMP Destination
   {
     type: CvedixNodeType.RTMP_DESTINATION,
-    category: NodeCategory.OUTPUT,
+    category: NodeCategory.DESTINATION,
     name: 'RTMP Stream',
     description: 'Stream output to RTMP server',
     icon: '📡',

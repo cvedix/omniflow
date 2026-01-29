@@ -6,13 +6,25 @@ export const NODE_COLORS = {
     text: 'text-blue-700',
     accent: 'bg-blue-500',
   },
-  processing: {
+  detector: {
+    bg: 'bg-purple-50',
+    border: 'border-purple-500',
+    text: 'text-purple-700',
+    accent: 'bg-purple-500',
+  },
+  analytics: {
     bg: 'bg-indigo-50',
     border: 'border-indigo-500',
     text: 'text-indigo-700',
     accent: 'bg-indigo-500',
   },
-  output: {
+  osd: {
+    bg: 'bg-amber-50',
+    border: 'border-amber-500',
+    text: 'text-amber-700',
+    accent: 'bg-amber-500',
+  },
+  destination: {
     bg: 'bg-cyan-50',
     border: 'border-cyan-500',
     text: 'text-cyan-700',

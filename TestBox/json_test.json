@@ -98,14 +98,6 @@
             }
         },
         {
-            "type": "cvedix_screen_des_node",
-            "config": {
-                "node_name": "screen_des_0",
-                "channel_index": 0,
-                "osd": true
-            }
-        },
-        {
             "type": "cvedix_rtmp_des_node",
             "config": {
                 "node_name": "rtmp_node",

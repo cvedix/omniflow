@@ -25,8 +25,10 @@ import { v4 as uuidv4 } from 'uuid';
 
 const nodeTypes: NodeTypes = {
   source: SourceNode,
-  processing: ProcessingNode,
-  output: OutputNode,
+  detector: ProcessingNode,
+  analytics: ProcessingNode,
+  osd: ProcessingNode,
+  destination: OutputNode,
 };
 
 export const FlowCanvas: React.FC = () => {
@@ -190,11 +192,15 @@ export const FlowCanvas: React.FC = () => {
           nodeColor={(node) => {
             switch (node.type) {
               case 'source':
-                return '#3b82f6';
-              case 'processing':
-                return '#6366f1';
-              case 'output':
-                return '#06b6d4';
+                return '#3b82f6'; // blue
+              case 'detector':
+                return '#a855f7'; // purple
+              case 'analytics':
+                return '#6366f1'; // indigo
+              case 'osd':
+                return '#f59e0b'; // amber
+              case 'destination':
+                return '#06b6d4'; // cyan
               default:
                 return '#9ca3af';
             }
