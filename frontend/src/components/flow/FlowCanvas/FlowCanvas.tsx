@@ -116,6 +116,13 @@ export const FlowCanvas: React.FC = () => {
       const nodeType = event.dataTransfer.getData('application/reactflow');
       if (!nodeType) return;
 
+      // Check if a node of this type already exists - only allow one of each type
+      const existingNode = pipeline.nodes.find((n) => n.type === nodeType);
+      if (existingNode) {
+        alert(`A ${existingNode.data.label} node already exists. Only one node of each type is allowed.`);
+        return;
+      }
+
       const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
       const position = reactFlowInstance.project({
         x: event.clientX - reactFlowBounds.left,
