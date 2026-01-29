@@ -76,13 +76,27 @@ void ControlPanel::stopPipeline(
         return;
     }
 
+    // Check if already stopping
+    if (g_pipelineStopping.load())
+    {
+        auto resp = HttpResponse::newHttpResponse();
+        resp->setBody(R"({"status":"stopping"})");
+        callback(resp);
+        return;
+    }
+
+    g_pipelineStopping.store(true);
     g_pipelineRunning.store(false);
 
-    if (g_pipelineThread.joinable() &&
-        std::this_thread::get_id() != g_pipelineThread.get_id())
-    {
-        g_pipelineThread.join();
-    }
+    // Detach the cleanup to a background thread so we don't block the HTTP response
+    std::thread convergence_thread([]()
+                                    {
+        if (g_pipelineThread.joinable())
+        {
+            g_pipelineThread.join();
+        }
+        g_pipelineStopping.store(false); });
+    convergence_thread.detach();
 
     auto resp = HttpResponse::newHttpResponse();
     resp->setBody(R"({"status":"stopped"})");

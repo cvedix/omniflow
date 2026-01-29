@@ -1,71 +1,110 @@
 import { NodeInstance, CvedixNodeType } from '@/models';
 import { BackendPipelineRequest, BackendNodeConfig } from '@/api/pipeline.api';
-import { hiddenNodeTemplates } from '@/api/mock/nodes.mock';
 
 /**
  * Build complete pipeline JSON for backend
- * Includes visible nodes + auto-generated hidden nodes in correct order
+ * Builds nodes in the correct order: Source -> YOLO -> Tracker -> Crossline -> OSD -> RTMP
  */
 export const buildBackendPipeline = (nodes: NodeInstance[]): BackendPipelineRequest => {
   const backendNodes: BackendNodeConfig[] = [];
 
   // Find visible nodes
   const sourceNode = nodes.find((n) => n.type === CvedixNodeType.FILE_SOURCE);
-  const trackerNode = nodes.find((n) => n.type === CvedixNodeType.TRACKER);
+  const yoloNode = nodes.find((n) => n.type === CvedixNodeType.YOLO_DETECTOR);
+  const trackerNode = nodes.find((n) => n.type === CvedixNodeType.DSORT_TRACKER);
+  const crosslineNode = nodes.find((n) => n.type === CvedixNodeType.BA_CROSSLINE);
+  const osdNode = nodes.find((n) => n.type === CvedixNodeType.BA_CROSSLINE_OSD);
   const destinationNode = nodes.find((n) => n.type === CvedixNodeType.RTMP_DESTINATION);
 
   // Build pipeline in correct order
+
+  // 1. File source node
   if (sourceNode) {
-    // 1. File source node - ensure all required fields are present
     backendNodes.push({
       type: sourceNode.type,
       config: {
-        node_name: 'file_src',
-        channel_index: 0,
+        node_name: sourceNode.data.config.node_name || 'file_src',
+        channel_index: sourceNode.data.config.channel_index ?? 0,
         video_name: sourceNode.data.config.video_name || '',
-        resize_ratio: 1.0,
-        cycle: true,
-        gst_decoder_name: 'avdec_h264',
-        skip_interval: 0,
+        resize_ratio: sourceNode.data.config.resize_ratio ?? 1.0,
+        cycle: sourceNode.data.config.cycle ?? true,
+        gst_decoder_name: sourceNode.data.config.gst_decoder_name || 'avdec_h264',
+        skip_interval: sourceNode.data.config.skip_interval ?? 1,
       },
     });
-
-    // 2. Frame decoder (hidden)
-    backendNodes.push(hiddenNodeTemplates[CvedixNodeType.FRAME_DECODER]);
-
-    // 3. Preprocess (hidden)
-    backendNodes.push(hiddenNodeTemplates[CvedixNodeType.PREPROCESS]);
   }
 
+  // 2. YOLO Detector node
+  if (yoloNode) {
+    backendNodes.push({
+      type: yoloNode.type,
+      config: {
+        node_name: yoloNode.data.config.node_name || 'yolo_detector',
+        input_width: yoloNode.data.config.input_width ?? 416,
+        input_height: yoloNode.data.config.input_height ?? 416,
+        batch_size: yoloNode.data.config.batch_size ?? 1,
+        class_id_offset: yoloNode.data.config.class_id_offset ?? 0,
+        score_threshold: yoloNode.data.config.score_threshold ?? 0.5,
+        confidence_threshold: yoloNode.data.config.confidence_threshold ?? 0.5,
+        nms_threshold: yoloNode.data.config.nms_threshold ?? 0.5,
+        scale: yoloNode.data.config.scale ?? 0.0039215686,
+        mean_r: yoloNode.data.config.mean_r ?? 0.0,
+        mean_g: yoloNode.data.config.mean_g ?? 0.0,
+        mean_b: yoloNode.data.config.mean_b ?? 0.0,
+        std_r: yoloNode.data.config.std_r ?? 1.0,
+        std_g: yoloNode.data.config.std_g ?? 1.0,
+        std_b: yoloNode.data.config.std_b ?? 1.0,
+        swap_rb: yoloNode.data.config.swap_rb ?? true,
+      },
+    });
+  }
+
+  // 3. DeepSORT Tracker node
   if (trackerNode) {
-    // 4. Tracker node
     backendNodes.push({
       type: trackerNode.type,
       config: {
-        ...trackerNode.data.config,
-        tracker_type: 'sort',
-        max_lost: 30,
-        iou_threshold: 0.3,
+        node_name: trackerNode.data.config.node_name || 'dsort_tracker',
       },
     });
-
-    // 5. Analytics (hidden)
-    backendNodes.push(hiddenNodeTemplates[CvedixNodeType.ANALYTICS]);
   }
 
+  // 4. BA Crossline node
+  if (crosslineNode) {
+    backendNodes.push({
+      type: crosslineNode.type,
+      config: {
+        node_name: crosslineNode.data.config.node_name || 'ba_crossline',
+        need_record_image: crosslineNode.data.config.need_record_image ?? true,
+        need_record_video: crosslineNode.data.config.need_record_video ?? false,
+      },
+    });
+  }
+
+  // 5. BA Crossline OSD node
+  if (osdNode) {
+    backendNodes.push({
+      type: osdNode.type,
+      config: {
+        node_name: osdNode.data.config.node_name || 'osd',
+        font: osdNode.data.config.font || '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+      },
+    });
+  }
+
+  // 6. RTMP destination node
   if (destinationNode) {
-    // 6. RTMP destination node - ensure all required fields are present
     backendNodes.push({
       type: destinationNode.type,
       config: {
-        node_name: 'rtmp_node',
-        channel_index: 0,
+        node_name: destinationNode.data.config.node_name || 'rtmp_node',
+        channel_index: destinationNode.data.config.channel_index ?? 0,
         rtmp_url: destinationNode.data.config.rtmp_url || 'rtmp://anhoidong.datacenter.cvedix.com:1935/live/stream',
-        resolution_width: destinationNode.data.config.resolution_width ?? 640,
-        resolution_height: destinationNode.data.config.resolution_height ?? 360,
-        bitrate: destinationNode.data.config.bitrate ?? 1000,
+        resolution_width: destinationNode.data.config.resolution_width ?? 360,
+        resolution_height: destinationNode.data.config.resolution_height ?? 240,
+        bitrate: destinationNode.data.config.bitrate ?? 600,
         osd: destinationNode.data.config.osd ?? true,
-        gst_encoder_name: 'x264enc',
+        gst_encoder_name: destinationNode.data.config.gst_encoder_name || 'x264enc',
       },
     });
   }
@@ -80,7 +119,10 @@ export const buildBackendPipeline = (nodes: NodeInstance[]): BackendPipelineRequ
  */
 export const validatePipeline = (nodes: NodeInstance[]): { valid: boolean; error?: string } => {
   const hasSource = nodes.some((n) => n.type === CvedixNodeType.FILE_SOURCE);
-  const hasTracker = nodes.some((n) => n.type === CvedixNodeType.TRACKER);
+  const hasYolo = nodes.some((n) => n.type === CvedixNodeType.YOLO_DETECTOR);
+  const hasTracker = nodes.some((n) => n.type === CvedixNodeType.DSORT_TRACKER);
+  const hasCrossline = nodes.some((n) => n.type === CvedixNodeType.BA_CROSSLINE);
+  const hasOsd = nodes.some((n) => n.type === CvedixNodeType.BA_CROSSLINE_OSD);
   const hasDestination = nodes.some((n) => n.type === CvedixNodeType.RTMP_DESTINATION);
 
   if (!hasSource) {
@@ -91,57 +133,66 @@ export const validatePipeline = (nodes: NodeInstance[]): { valid: boolean; error
     return { valid: false, error: 'Pipeline must have an RTMP Stream node' };
   }
 
-  // Tracker is optional but recommended
-  if (!hasTracker) {
-    console.warn('Pipeline has no tracker node');
-  }
-
   // Check source node has video selected
   const sourceNode = nodes.find((n) => n.type === CvedixNodeType.FILE_SOURCE);
   if (sourceNode && !sourceNode.data.config.video_name) {
     return { valid: false, error: 'Video Source node must have a video selected' };
   }
 
+  // Log warnings for missing optional processing nodes
+  if (!hasYolo) {
+    console.warn('Pipeline has no YOLO Detector node - detection will not work');
+  }
+  if (!hasTracker) {
+    console.warn('Pipeline has no DeepSORT Tracker node - tracking will not work');
+  }
+  if (!hasCrossline) {
+    console.warn('Pipeline has no Crossline Analytics node');
+  }
+  if (!hasOsd) {
+    console.warn('Pipeline has no Crossline OSD node - no visual overlay');
+  }
+
   return { valid: true };
+};
+
+/**
+ * Get the correct pipeline order for nodes
+ */
+const getPipelineOrder = (nodeType: string): number => {
+  const order: Record<string, number> = {
+    [CvedixNodeType.FILE_SOURCE]: 0,
+    [CvedixNodeType.YOLO_DETECTOR]: 1,
+    [CvedixNodeType.DSORT_TRACKER]: 2,
+    [CvedixNodeType.BA_CROSSLINE]: 3,
+    [CvedixNodeType.BA_CROSSLINE_OSD]: 4,
+    [CvedixNodeType.RTMP_DESTINATION]: 5,
+  };
+  return order[nodeType] ?? 99;
 };
 
 /**
  * Auto-generate connections for visual representation
  * Returns array of connection objects for ReactFlow
+ * Connections are made in pipeline order: Source -> YOLO -> Tracker -> Crossline -> OSD -> RTMP
  */
 export const generateAutoConnections = (nodes: NodeInstance[]) => {
   const connections = [];
 
-  const sourceNode = nodes.find((n) => n.type === CvedixNodeType.FILE_SOURCE);
-  const trackerNode = nodes.find((n) => n.type === CvedixNodeType.TRACKER);
-  const destinationNode = nodes.find((n) => n.type === CvedixNodeType.RTMP_DESTINATION);
+  // Sort nodes by pipeline order
+  const sortedNodes = [...nodes].sort(
+    (a, b) => getPipelineOrder(a.type) - getPipelineOrder(b.type)
+  );
 
-  // Source -> Tracker
-  if (sourceNode && trackerNode) {
+  // Create connections between consecutive nodes
+  for (let i = 0; i < sortedNodes.length - 1; i++) {
+    const sourceNode = sortedNodes[i];
+    const targetNode = sortedNodes[i + 1];
+
     connections.push({
-      id: `${sourceNode.id}-${trackerNode.id}`,
+      id: `${sourceNode.id}-${targetNode.id}`,
       source: sourceNode.id,
-      target: trackerNode.id,
-      animated: true,
-    });
-  }
-
-  // Tracker -> Destination
-  if (trackerNode && destinationNode) {
-    connections.push({
-      id: `${trackerNode.id}-${destinationNode.id}`,
-      source: trackerNode.id,
-      target: destinationNode.id,
-      animated: true,
-    });
-  }
-
-  // Source -> Destination (if no tracker)
-  if (sourceNode && destinationNode && !trackerNode) {
-    connections.push({
-      id: `${sourceNode.id}-${destinationNode.id}`,
-      source: sourceNode.id,
-      target: destinationNode.id,
+      target: targetNode.id,
       animated: true,
     });
   }

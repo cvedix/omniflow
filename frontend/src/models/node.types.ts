@@ -8,15 +8,17 @@ export enum NodeCategory {
 
 // Specific node types for Cvedix SDK
 export enum CvedixNodeType {
-  // Visual nodes
+  // Source nodes
   FILE_SOURCE = 'cvedix_file_src_node',
-  TRACKER = 'cvedix_tracker_node',
-  RTMP_DESTINATION = 'cvedix_rtmp_des_node',
 
-  // Hidden nodes (auto-generated)
-  FRAME_DECODER = 'cvedix_frame_decoder_node',
-  PREPROCESS = 'cvedix_preprocess_node',
-  ANALYTICS = 'cvedix_analytics_node',
+  // Processing nodes
+  YOLO_DETECTOR = 'cvedix_yolo_detector_node',
+  DSORT_TRACKER = 'cvedix_dsort_track_node',
+  BA_CROSSLINE = 'cvedix_ba_crossline_node',
+  BA_CROSSLINE_OSD = 'cvedix_ba_crossline_osd_node',
+
+  // Output nodes
+  RTMP_DESTINATION = 'cvedix_rtmp_des_node',
 }
 
 // Base node configuration
