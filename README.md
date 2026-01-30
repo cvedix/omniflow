@@ -154,6 +154,30 @@ npm run dev
 ```
 4. Truy cập [localhost:5173](http://localhost:5173/)
 
+### Khởi tạo luồng RTMP và HLS local (nếu cần)
+
+1. Đảm bảo việc Docker zlmedia có đang chạy ổn định
+
+```
+docker start zlmediakit
+docker ps
+```
+
+2. Kiểm tra response của  zlmedia
+
+```
+curl http://127.0.0.1:8080/index/api/getMediaList?secret=123456
+
+```
+
+3. Chạy cloudfare để đẩy lên HLS server sau khi có luồng RTMP:
+
+```
+cloudflared tunnel --url http://127.0.0.1:8080\
+```
+
+**lưu ý, sau khi chạy, cloudfare tunnel sẽ trả lại 1 domain HLS, sử dụng domain đó cho .env của FrontEnd
+
 
 
 
