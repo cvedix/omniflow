@@ -431,7 +431,7 @@ export const mockNodeSchemas: NodeSchema[] = [
         key: 'rtmp_url',
         label: 'RTMP URL',
         type: 'text',
-        defaultValue: 'rtmp://anhoidong.datacenter.cvedix.com:1935/live/stream',
+        defaultValue: import.meta.env.VITE_DEFAULT_RTMP_URL || 'rtmp://anhoidong.datacenter.cvedix.com:1935/live/stream',
         validation: { required: true },
         helpText: 'RTMP server URL for streaming',
       },
@@ -470,7 +470,7 @@ export const mockNodeSchemas: NodeSchema[] = [
     defaultConfig: {
       node_name: 'rtmp_node',
       channel_index: 0,
-      rtmp_url: 'rtmp://anhoidong.datacenter.cvedix.com:1935/live/stream',
+      rtmp_url: import.meta.env.VITE_DEFAULT_RTMP_URL || 'rtmp://anhoidong.datacenter.cvedix.com:1935/live/stream',
       resolution_width: 360,
       resolution_height: 240,
       bitrate: 600,

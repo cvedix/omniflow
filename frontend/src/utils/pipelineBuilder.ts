@@ -1,5 +1,5 @@
-import { NodeInstance, CvedixNodeType } from '@/models';
-import { BackendPipelineRequest, BackendNodeConfig } from '@/api/pipeline.api';
+import { NodeInstance, CvedixNodeType } from "@/models";
+import { BackendPipelineRequest, BackendNodeConfig } from "@/api/pipeline.api";
 
 /**
  * Build complete pipeline JSON for backend
@@ -7,18 +7,30 @@ import { BackendPipelineRequest, BackendNodeConfig } from '@/api/pipeline.api';
  * - Object Detection: Source -> YOLO -> Tracker -> Crossline -> Crossline OSD -> RTMP
  * - Face Detection: Source -> Face Detector -> Face OSD -> RTMP
  */
-export const buildBackendPipeline = (nodes: NodeInstance[]): BackendPipelineRequest => {
+export const buildBackendPipeline = (
+  nodes: NodeInstance[],
+): BackendPipelineRequest => {
   const backendNodes: BackendNodeConfig[] = [];
 
   // Find all nodes
   const sourceNode = nodes.find((n) => n.type === CvedixNodeType.FILE_SOURCE);
   const yoloNode = nodes.find((n) => n.type === CvedixNodeType.YOLO_DETECTOR);
-  const trackerNode = nodes.find((n) => n.type === CvedixNodeType.DSORT_TRACKER);
-  const crosslineNode = nodes.find((n) => n.type === CvedixNodeType.BA_CROSSLINE);
-  const crosslineOsdNode = nodes.find((n) => n.type === CvedixNodeType.BA_CROSSLINE_OSD);
-  const faceDetectorNode = nodes.find((n) => n.type === CvedixNodeType.YUNET_FACE_DETECTOR);
+  const trackerNode = nodes.find(
+    (n) => n.type === CvedixNodeType.DSORT_TRACKER,
+  );
+  const crosslineNode = nodes.find(
+    (n) => n.type === CvedixNodeType.BA_CROSSLINE,
+  );
+  const crosslineOsdNode = nodes.find(
+    (n) => n.type === CvedixNodeType.BA_CROSSLINE_OSD,
+  );
+  const faceDetectorNode = nodes.find(
+    (n) => n.type === CvedixNodeType.YUNET_FACE_DETECTOR,
+  );
   const faceOsdNode = nodes.find((n) => n.type === CvedixNodeType.FACE_OSD);
-  const destinationNode = nodes.find((n) => n.type === CvedixNodeType.RTMP_DESTINATION);
+  const destinationNode = nodes.find(
+    (n) => n.type === CvedixNodeType.RTMP_DESTINATION,
+  );
 
   // Build pipeline in correct order
 
@@ -27,12 +39,13 @@ export const buildBackendPipeline = (nodes: NodeInstance[]): BackendPipelineRequ
     backendNodes.push({
       type: sourceNode.type,
       config: {
-        node_name: sourceNode.data.config.node_name || 'file_src',
+        node_name: sourceNode.data.config.node_name || "file_src",
         channel_index: sourceNode.data.config.channel_index ?? 0,
-        video_name: sourceNode.data.config.video_name || '',
+        video_name: sourceNode.data.config.video_name || "",
         resize_ratio: sourceNode.data.config.resize_ratio ?? 1.0,
         cycle: sourceNode.data.config.cycle ?? true,
-        gst_decoder_name: sourceNode.data.config.gst_decoder_name || 'avdec_h264',
+        gst_decoder_name:
+          sourceNode.data.config.gst_decoder_name || "avdec_h264",
         skip_interval: sourceNode.data.config.skip_interval ?? 1,
       },
     });
@@ -43,7 +56,7 @@ export const buildBackendPipeline = (nodes: NodeInstance[]): BackendPipelineRequ
     backendNodes.push({
       type: yoloNode.type,
       config: {
-        node_name: yoloNode.data.config.node_name || 'yolo_detector',
+        node_name: yoloNode.data.config.node_name || "yolo_detector",
         input_width: yoloNode.data.config.input_width ?? 416,
         input_height: yoloNode.data.config.input_height ?? 416,
         batch_size: yoloNode.data.config.batch_size ?? 1,
@@ -68,7 +81,7 @@ export const buildBackendPipeline = (nodes: NodeInstance[]): BackendPipelineRequ
     backendNodes.push({
       type: trackerNode.type,
       config: {
-        node_name: trackerNode.data.config.node_name || 'dsort_tracker',
+        node_name: trackerNode.data.config.node_name || "dsort_tracker",
       },
     });
   }
@@ -78,7 +91,7 @@ export const buildBackendPipeline = (nodes: NodeInstance[]): BackendPipelineRequ
     backendNodes.push({
       type: crosslineNode.type,
       config: {
-        node_name: crosslineNode.data.config.node_name || 'ba_crossline',
+        node_name: crosslineNode.data.config.node_name || "ba_crossline",
         need_record_image: crosslineNode.data.config.need_record_image ?? true,
         need_record_video: crosslineNode.data.config.need_record_video ?? false,
       },
@@ -90,8 +103,10 @@ export const buildBackendPipeline = (nodes: NodeInstance[]): BackendPipelineRequ
     backendNodes.push({
       type: crosslineOsdNode.type,
       config: {
-        node_name: crosslineOsdNode.data.config.node_name || 'osd',
-        font: crosslineOsdNode.data.config.font || '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+        node_name: crosslineOsdNode.data.config.node_name || "osd",
+        font:
+          crosslineOsdNode.data.config.font ||
+          "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
       },
     });
   }
@@ -101,7 +116,7 @@ export const buildBackendPipeline = (nodes: NodeInstance[]): BackendPipelineRequ
     backendNodes.push({
       type: faceDetectorNode.type,
       config: {
-        node_name: faceDetectorNode.data.config.node_name || 'face_detector',
+        node_name: faceDetectorNode.data.config.node_name || "face_detector",
       },
     });
   }
@@ -111,7 +126,7 @@ export const buildBackendPipeline = (nodes: NodeInstance[]): BackendPipelineRequ
     backendNodes.push({
       type: faceOsdNode.type,
       config: {
-        node_name: faceOsdNode.data.config.node_name || 'osd',
+        node_name: faceOsdNode.data.config.node_name || "osd",
       },
     });
   }
@@ -121,14 +136,18 @@ export const buildBackendPipeline = (nodes: NodeInstance[]): BackendPipelineRequ
     backendNodes.push({
       type: destinationNode.type,
       config: {
-        node_name: destinationNode.data.config.node_name || 'rtmp_node',
+        node_name: destinationNode.data.config.node_name || "rtmp_node",
         channel_index: destinationNode.data.config.channel_index ?? 0,
-        rtmp_url: destinationNode.data.config.rtmp_url || 'rtmp://anhoidong.datacenter.cvedix.com:1935/live/stream',
+        rtmp_url:
+          destinationNode.data.config.rtmp_url ||
+          import.meta.env.VITE_DEFAULT_RTMP_URL ||
+          "rtmp://anhoidong.datacenter.cvedix.com:1935/live/stream",
         resolution_width: destinationNode.data.config.resolution_width ?? 360,
         resolution_height: destinationNode.data.config.resolution_height ?? 240,
         bitrate: destinationNode.data.config.bitrate ?? 600,
         osd: destinationNode.data.config.osd ?? true,
-        gst_encoder_name: destinationNode.data.config.gst_encoder_name || 'x264enc',
+        gst_encoder_name:
+          destinationNode.data.config.gst_encoder_name || "x264enc",
       },
     });
   }
@@ -141,40 +160,56 @@ export const buildBackendPipeline = (nodes: NodeInstance[]): BackendPipelineRequ
 /**
  * Validate that pipeline has required nodes
  */
-export const validatePipeline = (nodes: NodeInstance[]): { valid: boolean; error?: string } => {
+export const validatePipeline = (
+  nodes: NodeInstance[],
+): { valid: boolean; error?: string } => {
   const hasSource = nodes.some((n) => n.type === CvedixNodeType.FILE_SOURCE);
-  const hasDestination = nodes.some((n) => n.type === CvedixNodeType.RTMP_DESTINATION);
+  const hasDestination = nodes.some(
+    (n) => n.type === CvedixNodeType.RTMP_DESTINATION,
+  );
 
   // Check for object detection pipeline nodes
   const hasYolo = nodes.some((n) => n.type === CvedixNodeType.YOLO_DETECTOR);
   const hasTracker = nodes.some((n) => n.type === CvedixNodeType.DSORT_TRACKER);
-  const hasCrossline = nodes.some((n) => n.type === CvedixNodeType.BA_CROSSLINE);
-  const hasCrosslineOsd = nodes.some((n) => n.type === CvedixNodeType.BA_CROSSLINE_OSD);
+  const hasCrossline = nodes.some(
+    (n) => n.type === CvedixNodeType.BA_CROSSLINE,
+  );
+  const hasCrosslineOsd = nodes.some(
+    (n) => n.type === CvedixNodeType.BA_CROSSLINE_OSD,
+  );
 
   // Check for face detection pipeline nodes
-  const hasFaceDetector = nodes.some((n) => n.type === CvedixNodeType.YUNET_FACE_DETECTOR);
+  const hasFaceDetector = nodes.some(
+    (n) => n.type === CvedixNodeType.YUNET_FACE_DETECTOR,
+  );
   const hasFaceOsd = nodes.some((n) => n.type === CvedixNodeType.FACE_OSD);
 
   if (!hasSource) {
-    return { valid: false, error: 'Pipeline must have a Video Source node' };
+    return { valid: false, error: "Pipeline must have a Video Source node" };
   }
 
   if (!hasDestination) {
-    return { valid: false, error: 'Pipeline must have an RTMP Stream node' };
+    return { valid: false, error: "Pipeline must have an RTMP Stream node" };
   }
 
   // Check source node has video selected
   const sourceNode = nodes.find((n) => n.type === CvedixNodeType.FILE_SOURCE);
   if (sourceNode && !sourceNode.data.config.video_name) {
-    return { valid: false, error: 'Video Source node must have a video selected' };
+    return {
+      valid: false,
+      error: "Video Source node must have a video selected",
+    };
   }
 
   // Check that at least one processing pipeline is present
-  const hasObjectDetectionPipeline = hasYolo || hasTracker || hasCrossline || hasCrosslineOsd;
+  const hasObjectDetectionPipeline =
+    hasYolo || hasTracker || hasCrossline || hasCrosslineOsd;
   const hasFaceDetectionPipeline = hasFaceDetector || hasFaceOsd;
 
   if (!hasObjectDetectionPipeline && !hasFaceDetectionPipeline) {
-    console.warn('Pipeline has no processing nodes - only source and destination');
+    console.warn(
+      "Pipeline has no processing nodes - only source and destination",
+    );
   }
 
   return { valid: true };
@@ -211,7 +246,7 @@ export const generateAutoConnections = (nodes: NodeInstance[]) => {
 
   // Sort nodes by pipeline order
   const sortedNodes = [...nodes].sort(
-    (a, b) => getPipelineOrder(a.type) - getPipelineOrder(b.type)
+    (a, b) => getPipelineOrder(a.type) - getPipelineOrder(b.type),
   );
 
   // Create connections between consecutive nodes
