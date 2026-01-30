@@ -16,412 +16,12 @@ Một số đặc điểm nổi bật của CvedixLego:
 Tóm lại, CvedixLego là nền tảng công nghệ cốt lõi giúp doanh nghiệp và ngành công nghiệp triển khai, ứng dụng AI vào tự động hóa, nhận diện và điều khiển thiết bị một cách dễ dàng và hiệu quả.
 
 ---
-## 🎯 Tạo Project
-### Tạo project mới
-```bash
-# Di chuyển đến thư mục làm việc
-cd /path/to/workspace
-
-# Tạo project mới
-drogon_ctl create project your_project_name
-
-# Di chuyển vào project
-cd your_project_name
-```
-
-### Khởi tạo build
-```bash
-mkdir build
-cd build
-cmake ..
-make
-```
-
-
-
-
-
-
----
-
-## 📁 Cấu trúc thư mục
-
-```
-your_project_name/
-├── controllers/      # HTTP API handlers
-├── filters/          # Middleware (auth, validation, logging)
-├── models/           # Database ORM models
-├── plugins/          # Background services
-├── views/            # HTML templates
-├── config.json       # Server configuration
-├── main.cc           # Entry point
-└── CMakeLists.txt    # Build configuration
-
-
-
-
-
-
-```
-
-## 🔧 Drogon CLI Commands
-
-| Command | Description |
-|---------|-------------|
-| `drogon_ctl create project <name>` | Tạo project mới |
-| `drogon_ctl create controller -s <name>` | Tạo Simple Controller |
-| `drogon_ctl create controller -h <name>` | Tạo HTTP Controller |
-| `drogon_ctl create filter <name>` | Tạo Filter |
-| `drogon_ctl create model <folder>` | Tạo ORM models từ DB |
-| `drogon_ctl create view <name>` | Tạo View template |
-| `drogon_ctl create plugin <name>` | Tạo Plugin |
-
-
-
-
----
-
-
-## 🎮 Controllers
-**Nơi xử lý HTTP API requests**
-
-### Tạo Simple Controller (một endpoint đơn giản)
-```bash
-drogon_ctl create controller -s YourControllerName
-```
-
-**Ví dụ: Simple Controller**
-```cpp
-class Api : public HttpSimpleController<Api, true>
-{
-public:
-    void asyncHandleHttpRequest(
-        const HttpRequestPtr &req,
-        std::function<void(const HttpResponsePtr &)> &&callback
-    ) override;
-
-    PATH_LIST_BEGIN
-    PATH_ADD("/api/hello", drogon::Get);
-    PATH_ADD("/api/data", drogon::Post);
-    PATH_LIST_END
-};
-```
-
-### Tạo HTTP Controller (nhiều methods trong một class)
-```bash
-drogon_ctl create controller -h UserController
-```
-
-**Ví dụ: HTTP Controller**
-```cpp
-class UserController : public HttpController<UserController>
-{
-public:
-    METHOD_LIST_BEGIN
-    ADD_METHOD_TO(UserController::login, "/login", Post);
-    ADD_METHOD_TO(UserController::getUser, "/user/{1}", Get);
-    ADD_METHOD_TO(UserController::updateUser, "/user/{1}", Put);
-    ADD_METHOD_TO(UserController::deleteUser, "/user/{1}", Delete);
-    METHOD_LIST_END
-
-    void login(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback);
-    void getUser(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback, int userId);
-    void updateUser(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback, int userId);
-    void deleteUser(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback, int userId);
-};
-
-
-
-
-
-**📌 Lưu ý:**
-- Template parameter thứ 2 phải là `true` để auto-register
-- Class name không được trùng với HTTP methods (Get, Post, Put, Delete)
-
-
-
-
-
-
-
-
-
-
----
-
-## 🛡️ Filters
-**Middleware để xử lý auth, validation, logging...**
-
-### Tạo Filter
-```bash
-drogon_ctl create filter FilterName
-```
-
-**Ví dụ: Authentication Filter**
-```cpp
-class AuthFilter : public HttpFilter<AuthFilter>
-{
-public:
-    void doFilter(
-        const HttpRequestPtr &req,
-        FilterCallback &&fcb,
-        FilterChainCallback &&fccb
-    ) override
-    {
-        std::string token = req->getHeader("Authorization");
-        
-        if (!token.empty() && token == "Bearer valid-token")
-        {
-            fccb(); // ✅ Cho phép tiếp tục
-        }
-        else
-        {
-            // ❌ Chặn request
-            Json::Value json;
-            json["error"] = "Unauthorized";
-            auto resp = HttpResponse::newHttpJsonResponse(json);
-            resp->setStatusCode(k401Unauthorized);
-            fcb(resp);
-        }
-    }
-};
-```
-
-### Sử dụng Filter trong Controller
-```cpp
-PATH_ADD("/api/protected", "AuthFilter", drogon::Get);
-```
-
-**Các use case phổ biến:**
-- ✅ Auth token validation
-- ✅ JWT verification
-- ✅ Request logging
-- ✅ CORS headers
-- ✅ Rate limiting
-- ✅ Body validation
-
-
-
-
-
-
-
-
-
-
-
-
-
-
----
-
-## 💾 Models
-**ORM để làm việc với Database**
-
-### Cấu hình Database trong config.json
-```json
-{
-    "db_clients": [
-        {
-            "name": "default",
-            "rdbms": "postgresql",
-            "host": "127.0.0.1",
-            "port": 5432,
-            "dbname": "mydb",
-            "user": "postgres",
-            "password": "password",
-            "connection_number": 3
-        }
-    ]
-}
-```
-
-### Tạo Model từ Database
-```bash
-# Tạo model từ database table
-drogon_ctl create model models
-```
-
-File `models/model.json`:
-```json
-{
-    "rdbms": "postgresql",
-    "host": "127.0.0.1",
-    "port": 5432,
-    "dbname": "mydb",
-    "user": "postgres",
-    "password": "password",
-    "tables": ["users", "posts", "comments"]
-}
-```
-
-### Sử dụng ORM
-```cpp
-auto db = drogon::app().getDbClient();
-
-// SELECT
-auto result = db->execSqlSync("SELECT * FROM users WHERE id = $1", userId);
-
-// INSERT
-db->execSqlSync("INSERT INTO users (name, email) VALUES ($1, $2)", "John", "john@example.com");
-```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
----
-
-## 🔌 Plugins
-**Background services chạy song song với server**
-
-### Tạo Plugin
-```bash
-drogon_ctl create plugin PluginName
-```
-
-**Ví dụ: Redis Client Plugin**
-```cpp
-class RedisPlugin : public Plugin<RedisPlugin>
-{
-public:
-    void initAndStart(const Json::Value &config) override
-    {
-        LOG_INFO << "Redis Plugin started";
-        // Khởi tạo Redis connection
-    }
-
-    void shutdown() override
-    {
-        LOG_INFO << "Redis Plugin shutdown";
-        // Cleanup
-    }
-};
-```
-
-**Các use case:**
-- ✅ Redis/Memcached client
-- ✅ Message queue consumer (Kafka, RabbitMQ)
-- ✅ Scheduled tasks
-- ✅ Cache management
-- ✅ Logging service
-- ✅ WebSocket manager
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
----
-
-## 🎨 Views
-**Template HTML cho server-side rendering**
-
-### Tạo View
-```bash
-drogon_ctl create view ViewName
-```
-
-Drogon hỗ trợ template engine CSP (C++ Server Pages).
-
-**Ví dụ:**
-```html
-<!DOCTYPE html>
-<html>
-<head>
-    <title><%c++ $$<<"Hello"; %></title>
-</head>
-<body>
-    <h1>User: <%c++ $$<<get<std::string>("username"); %></h1>
-</body>
-</html>
-```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
----
-
-## ⚙️ Configuration
-**File: `config.json`**
-
-```json
-{
-    "listeners": [
-        {
-            "address": "0.0.0.0",
-            "port": 5555,
-            "https": false
-        }
-    ],
-    "threads_num": 16,
-    "log": {
-        "log_path": "./logs",
-        "logfile_base_name": "drogon",
-        "log_size_limit": 100000000,
-        "log_level": "INFO"
-    },
-    "app": {
-        "max_connections": 100000,
-        "document_root": "./",
-        "upload_path": "uploads",
-        "session_timeout": 1200,
-        "enable_session": true,
-        "enable_gzip": true
-    },
-    "db_clients": []
-}
-```
-
-
-
-
-
-
-
-
-
-
-
-
-
----
 
 ## 🏗️ Build & Run
 
-### Build project
+### Build backend
+
+
 ```bash
 cd build
 cmake ..
@@ -432,12 +32,9 @@ make -j4
 
 
 
-
-
-
 ### Chạy server
 ```bash
-./your_project_name
+./cvedix_backend # hoặc bất cứ project name nào gán lúc build cmake
 ```
 
 
@@ -525,9 +122,37 @@ curl -X POST http://localhost:5555/api/upload \
 Short Video
 
 ---
+```
 
+### Build Front-End
 
+1. navigate vào thư mục FrontEnd vả cài các dependencies cần thiết
 
+```bash
+cd frontend
+npm i
+```
+
+2. Khởi tạo 1 file .env và copy nội dung cần thiết từ .env_example qua. Có thể xem qua .env này cho URL backend, HLS và RTMP
+
+```bash
+# Backend API Configuration
+VITE_API_BASE_URL=http://localhost:8090
+
+# RTMP Stream Configuration
+VITE_DEFAULT_RTMP_URL=rtmp://127.0.0.1:1935/live/test
+
+# HLS Media Server Configuration
+# The backend streams RTMP to the RTMP server, and the HLS server transcodes it for browser playback
+VITE_HLS_BASE_URL=https://spatial-transcripts-ddr-compound.trycloudflare.com
+```
+
+3. Chạy Frontend
+
+```bash
+npm run dev
+```
+4. Truy cập [localhost:5173](http://localhost:5173/)
 
 
 
